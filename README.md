@@ -1,16 +1,11 @@
-# umakvotingapp
+# UMak Student Body Voting System Application
 
-A new Flutter project.
+This is a modern, cross-platform voting system designed specifically for student bodies. Developed using Flutter, the application provides a responsive and intuitive user experience on multiple devices and platforms. It is built leveraging a mix of state-of-the-art technologies to ensure reliability, scalability, and ease of use.
 
-## Getting Started
+## Technologies
 
-This project is a starting point for a Flutter application.
+- **Flutter**: The UI toolkit for crafting natively compiled applications for mobile, web, and desktop from a single codebase.
+- **Dart**: The programming language used to write the app logic and interface.
+- **Supabase**: The BaaS used for this application to provide a Relational Database
 
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+This application integrates these technologies to provide a secure, efficient, and user-friendly voting environment tailored for student communities.
