@@ -1,3 +1,6 @@
+import 'dart:developer';
+
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide Provider;
 // import '/flutter_flow/nav/nav.dart';
@@ -21,26 +24,35 @@ class SupaFlow {
   SupaFlow._();
 
   static Future initialize() async {
-    // Retrieve stored values from SharedPreferences
-    final prefs = await SharedPreferences.getInstance();
-    final url = prefs.getString(_prefsSupabaseUrl) ?? '';
-    final anonKey = prefs.getString(_prefsSupabaseAnonKey) ?? '';
+    final url = dotenv.env['SUPABASE_URL'];
+    final anonKey = dotenv.env['SUPABASE_ANON_KEY'];
+    Supabase supabase;
 
     // Initialize Supabase with the loaded values
-    await Supabase.initialize(
-      url: url,
-      anonKey: anonKey,
-      debug: false,
-    );
+    if (url!.isNotEmpty && anonKey!.isNotEmpty) {
+      print('[Supabase] Anon Key: $anonKey');
+      print('[Supabase] URL: $url');
 
-    final session = Supabase.instance.client.auth.currentSession;
-    print('[Supabase] Initial session: ${session != null ? 'exists' : 'null'}');
-    if (session != null) {
-      print('[Supabase] User ID: ${session.user.id}');
-      // Create auth user wrapper and update app state
-      // Initialize your auth here
-      //final authUser = FlutterAppSupabaseUser(session.user);
-      //AppStateNotifier.instance.update(authUser);
+      try {
+        supabase = await Supabase.initialize(
+          url: url,
+          anonKey: anonKey,
+          debug: true,
+        );
+
+        final session = supabase.client.auth.currentSession;
+        print(
+            '[Supabase] Initial session: ${session != null ? 'exists' : 'null'}');
+        if (session != null) {
+          print('[Supabase] User ID: ${session.user.id}');
+          // Create auth user wrapper and update app state
+          // Initialize your auth here
+          //final authUser = FlutterAppSupabaseUser(session.user);
+          //AppStateNotifier.instance.update(authUser);
+        }
+      } catch (e) {
+        log('[Supabase] Error initializing Supabase: $e');
+      }
     }
   }
 }

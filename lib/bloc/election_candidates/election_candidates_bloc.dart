@@ -1,6 +1,7 @@
 import 'package:bloc/bloc.dart';
 import 'package:meta/meta.dart';
 import 'package:umakvotingapp/backend/supabase/database/database.dart';
+import 'package:umakvotingapp/supabase/database/database.dart';
 
 part 'election_candidates_event.dart';
 part 'election_candidates_state.dart';
@@ -12,12 +13,21 @@ class ElectionCandidatesBloc
       if (event is GetElectionCandidates) {
         emit(ElectionCandidatesLoading(event.electionId));
         try {
-          final electionCandidates =
-              await CandidatesTable().queryRows(queryFn: (query) {
-            return query
-                .eq("id", event.electionId)
-                .eq("position", event.position);
+          final selectedPosition =
+              await PositionsTable().querySingleRow(queryFn: (query) {
+            return query.eq("prio", event.prio);
           });
+
+          print(selectedPosition);
+          final response = await SupaFlow.client
+              .from("candidates")
+              .select('*, partylists:partylists (id, name, abbreviation), college:colleges!college_id (id, full_name, acronym, logo_url)')
+              .eq("election_id", event.electionId)
+              .eq("position", selectedPosition[0].id);
+
+          final electionCandidates = response;
+
+          print(electionCandidates);
 
           emit(
               ElectionCandidatesLoaded(electionCandidates: electionCandidates));

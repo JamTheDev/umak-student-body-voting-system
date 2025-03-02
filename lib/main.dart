@@ -4,10 +4,13 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:umakvotingapp/bloc/candidate_experience_bloc/candidate_experience_bloc.dart';
 import 'package:umakvotingapp/bloc/election_candidates/election_candidates_bloc.dart';
 import 'package:umakvotingapp/bloc/elections_bloc/elections_bloc.dart';
+import 'package:umakvotingapp/bloc/google_login_bloc/google_login_bloc.dart';
 import 'package:umakvotingapp/bloc/supabase_connection/supabase_connection_bloc.dart';
 import 'package:umakvotingapp/components/qr_scanner.dart';
+import 'package:umakvotingapp/supabase/database/database.dart';
 import "constants/shared_pref_keys.dart";
 import 'package:fluttertoast/fluttertoast.dart';
 import "main/voting_screen.dart";
@@ -17,13 +20,13 @@ import 'dart:developer' as developer;
 Future<void> main() async {
   await dotenv.load(fileName: "../.env");
   checkSupabaseConnection(null, null);
+  SupaFlow.initialize();
 
   runApp(const MainLandingPage());
 }
 
 Future<bool> checkSupabaseConnection(
     String? supabaseUrl, String? supabaseAnonCode) async {
-  developer.log("triggered.");
   try {
     if (supabaseUrl == null || supabaseAnonCode == null) {
       SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -50,8 +53,7 @@ Future<bool> checkSupabaseConnection(
     } catch (e) {
       developer.log("supabase has not been initialized yet.");
       Fluttertoast.showToast(
-          msg:
-              "Connecting to Supabase...",
+          msg: "Connecting to Supabase...",
           toastLength: Toast.LENGTH_SHORT,
           gravity: ToastGravity.CENTER,
           timeInSecForIosWeb: 1,
@@ -100,6 +102,11 @@ class _MainLandingPageState extends State<MainLandingPage> {
             BlocProvider<ElectionCandidatesBloc>(
                 create: (context) => ElectionCandidatesBloc()),
             BlocProvider<ElectionsBloc>(create: (context) => ElectionsBloc()),
+            BlocProvider<GoogleLoginBloc>(
+                create: (context) => GoogleLoginBloc()),
+            BlocProvider<CandidateExperienceBloc>(
+              create: (context) => CandidateExperienceBloc(),
+            )
           ],
           child: MaterialApp(
             title: "UMak Voting App",
@@ -141,7 +148,7 @@ class _HomeScaffoldState extends State<HomeScaffold> {
       child: Scaffold(
         body: Stack(
           children: [
-            Container(
+            SizedBox(
               height: MediaQuery.of(context).size.height,
               width: MediaQuery.of(context).size.width,
               child: Image.asset(
@@ -150,7 +157,7 @@ class _HomeScaffoldState extends State<HomeScaffold> {
               ),
             ),
             Center(
-              child: Container(
+              child: SizedBox(
                 height: MediaQuery.of(context).size.height * 0.8,
                 child: Column(
                   children: [
@@ -177,6 +184,22 @@ class _HomeScaffoldState extends State<HomeScaffold> {
                           margin: const EdgeInsets.symmetric(horizontal: 5),
                           child: Image.asset(
                             "images/CCIS.png",
+                            width: 70,
+                            height: 70,
+                          ),
+                        ),
+                        Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 5),
+                          child: Image.asset(
+                            "images/COSEL.png",
+                            width: 70,
+                            height: 70,
+                          ),
+                        ),
+                        Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 5),
+                          child: Image.asset(
+                            "images/USC.png",
                             width: 70,
                             height: 70,
                           ),
@@ -272,131 +295,32 @@ class _HomeScaffoldState extends State<HomeScaffold> {
                         ),
                       ],
                     ),
-                    const Expanded(child: SizedBox(), flex: 1),
-                    SizedBox(
-                      width: MediaQuery.of(context).size.width * 0.7,
-                      height: 50,
-                      child: FutureBuilder(
-                        future: supabaseConnection,
-                        builder: (BuildContext context,
-                            AsyncSnapshot<bool> snapshot) {
-                          return TextButton(
-                            onPressed: snapshot.data != null && snapshot.data!
-                                ? () async {
-                                    var data = await scanQrCode(context);
-                                    SharedPreferences prefs =
-                                        await SharedPreferences.getInstance();
-                                    prefs.setString(studentId, data);
-                                  }
-                                : null,
-                            style: ButtonStyle(backgroundColor:
-                                WidgetStateProperty.resolveWith<Color>(
-                              (Set<WidgetState> states) {
-                                if (states.contains(WidgetState.disabled)) {
-                                  return const Color.fromARGB(255, 39, 56, 131);
-                                }
-                                return const Color.fromRGBO(65, 93, 214, 1);
-                              },
-                            ), textStyle:
-                                WidgetStateProperty.resolveWith<TextStyle>(
-                              (Set<WidgetState> states) {
-                                if (states.contains(WidgetState.disabled)) {
-                                  return TextStyle(
-                                    color: const Color.fromARGB(
-                                        255, 255, 255, 255),
-                                    fontFamily: "Metropolis",
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16.spMin,
-                                  );
-                                }
-                                return TextStyle(
-                                  color: Colors.white,
-                                  fontFamily: "Metropolis",
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16.spMin,
-                                );
-                              },
-                            )),
-                            child: Text(
-                              "Scan Student ID",
-                              style: TextStyle(
-                                color: snapshot.hasData && snapshot.data!
-                                    ? Colors.white
-                                    : Colors.white24,
-                                fontFamily: "Metropolis",
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16.spMin,
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
+                    Expanded(flex: 1, child: Container()),
                     Container(
                       width: MediaQuery.of(context).size.width * 0.7,
                       margin: const EdgeInsets.symmetric(vertical: 10),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: SizedBox(
-                              height: 50,
-                              child: TextButton(
-                                onPressed: () async {
-                                  var data = await scanQrCode(context);
-                                  SharedPreferences prefs =
-                                      await SharedPreferences.getInstance();
-                                  prefs.setString(
-                                      supabaseUrlKey,
-                                      data
-                                          .toString()
-                                          .replaceAll("https", "http"));
-                                },
-                                style: const ButtonStyle(
-                                  backgroundColor: WidgetStatePropertyAll(
-                                    Color.fromRGBO(65, 93, 214, 1),
-                                  ),
-                                ),
-                                child: Text(
-                                  "Scan Backend URL",
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontFamily: "Metropolis",
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14.spMin,
-                                  ),
-                                ),
-                              ),
+                      child: SizedBox(
+                        height: 50,
+                        child: TextButton(
+                          onPressed: () async {
+                            BlocProvider.of<GoogleLoginBloc>(context)
+                                .add(OnGoogleLogin());
+                          },
+                          style: const ButtonStyle(
+                            backgroundColor: WidgetStatePropertyAll(
+                              Color.fromRGBO(65, 93, 214, 1),
                             ),
                           ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: SizedBox(
-                              height: 50,
-                              child: TextButton(
-                                onPressed: () async {
-                                  var data = await scanQrCode(context);
-                                  SharedPreferences prefs =
-                                      await SharedPreferences.getInstance();
-                                  prefs.setString(supabaseAnonKey, data);
-                                },
-                                style: const ButtonStyle(
-                                  backgroundColor: WidgetStatePropertyAll(
-                                    Color.fromRGBO(65, 93, 214, 1),
-                                  ),
-                                ),
-                                child: Text(
-                                  "Scan Anon Code",
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontFamily: "Metropolis",
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14.spMin,
-                                  ),
-                                ),
-                              ),
+                          child: Text(
+                            "Login using UMak GMail Account",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontFamily: "Metropolis",
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14.spMin,
                             ),
                           ),
-                        ],
+                        ),
                       ),
                     ),
                     Container(

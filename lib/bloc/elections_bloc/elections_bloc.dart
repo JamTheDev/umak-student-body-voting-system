@@ -15,8 +15,9 @@ class ElectionsBloc extends Bloc<ElectionsEvent, ElectionsState> {
         final elections = await ElectionsTable().queryRows(queryFn: (query) {
           return query.order("created_at", ascending: false);
         });
+
         emit(ElectionsLoaded(elections: elections));
-      } catch (e) {
+      } on Exception catch (e) {
         emit(ElectionsError(message: e.toString()));
       }
     });
@@ -30,16 +31,11 @@ class ElectionsBloc extends Bloc<ElectionsEvent, ElectionsState> {
         print("hi 1");
         final activeElection =
             await ElectionsTable().querySingleRow(queryFn: (query) {
-          return query;
-          // .filter("start_date", "<=", today.toIso8601String())
-          // .filter("end_date", ">=", today.toIso8601String())
-          // .limit(1);
+          return query
+              .filter("start_time", "lte", today.toIso8601String())
+              .filter("end_time", "gte", today.toIso8601String())
+              .limit(1);
         });
-        SharedPreferences prefs = await SharedPreferences.getInstance();
-        late String url = prefs.getString("supabaseUrl") ?? '';
-        late String key = prefs.getString("supabaseAnonKey") ?? '';
-        print("hi");
-        print(url);
         print(activeElection);
 
         emit(ActiveElectionLoaded(activeElection[0]));

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:bottom_sheet/bottom_sheet.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:umakvotingapp/backend/supabase/database/database.dart';
+import 'package:umakvotingapp/bloc/candidate_experience_bloc/candidate_experience_bloc.dart';
 import 'package:umakvotingapp/bloc/election_candidates/election_candidates_bloc.dart';
 import 'package:umakvotingapp/bloc/elections_bloc/elections_bloc.dart';
 import 'package:umakvotingapp/bloc/supabase_connection/supabase_connection_bloc.dart';
@@ -19,12 +20,14 @@ class VotingScreen extends StatefulWidget {
 }
 
 class _VotingScreenState extends State<VotingScreen> {
+  ScrollController scr = ScrollController();
+  double bottomSheetOffset = 8;
+
   @override
   void initState() {
     super.initState();
 
-    BlocProvider.of<SupabaseConnectionBloc>(context)
-        .add(OnSupabaseConnect(null, null));
+    BlocProvider.of<ElectionsBloc>(context).add(GetActiveElection());
   }
 
   void showVotingDialog(BuildContext context) {
@@ -36,364 +39,237 @@ class _VotingScreenState extends State<VotingScreen> {
 
   @override
   Widget build(BuildContext rootContext) {
-    ;
     return Scaffold(
-      body: BlocListener<SupabaseConnectionBloc, SupabaseConnectionState>(
+      body: BlocConsumer<ElectionsBloc, ElectionsState>(
         listener: (context, state) {
-          if (state is SupabaseConnectionFailed) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.error),
-              ),
-            );
-          }
-
-          if (state is SupabaseConnectionConnected) {
-            // Future.delayed(Duration.zero, () => showVotingDialog(context));
-            BlocProvider.of<ElectionsBloc>(context).add(GetActiveElection());
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Connected to the server.'),
-              ),
-            );
+          if (state is ActiveElectionLoaded) {
+            BlocProvider.of<ElectionCandidatesBloc>(context)
+                .add(GetElectionCandidates(state.activeElection.id, 0));
           }
         },
-        child: BlocBuilder<SupabaseConnectionBloc, SupabaseConnectionState>(
-          builder: (context, state) {
-            if (state is SupabaseConnectionConnecting) {
-              return Container(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Color(0xFF132255), Color(0xFF1D267D)],
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                  ),
-                ),
-                child: const Center(
+        builder: (context, state) {
+          if (state is ElectionsLoading) {
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
+          }
+
+          if (state is ElectionsError) {
+            return Container(
+              child: Text("Error: ${state.message}"),
+            );
+          }
+
+          return state is ActiveElectionLoaded
+              ? Container(
+                  clipBehavior: Clip.antiAlias,
+                  decoration: const BoxDecoration(color: Colors.white),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                        strokeWidth: 4,
-                      ),
-                      SizedBox(height: 20),
-                      Text(
-                        "Loading, please wait...",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontFamily: 'Metropolis',
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }
-
-            // Existing UI when not loading
-            return BlocConsumer<ElectionsBloc, ElectionsState>(
-              listener: (context, state) {
-                if (state is ActiveElectionLoaded) {
-                  BlocProvider.of<ElectionCandidatesBloc>(context)
-                      .add(GetElectionCandidates(state.activeElection.id, 0));
-                }
-              },
-              builder: (context, state) {
-                if (state is ElectionsLoading) {
-                  return const Center(
-                    child: CircularProgressIndicator(),
-                  );
-                }
-
-                return state is ElectionsLoaded
-                    ? Container(
-                        clipBehavior: Clip.antiAlias,
-                        decoration: const BoxDecoration(color: Colors.white),
+                      SizedBox(
+                        width: double.infinity,
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          mainAxisAlignment: MainAxisAlignment.start,
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            SizedBox(
-                              width: double.infinity,
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  Container(
-                                    width: double.infinity,
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 41, vertical: 25),
-                                    decoration: const BoxDecoration(
-                                        color: Color(0xFF132255)),
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.center,
-                                      children: [
-                                        SizedBox(
-                                          width: double.infinity,
-                                          child: Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.spaceBetween,
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              const SizedBox(
-                                                width: 222,
-                                                child: Column(
-                                                  mainAxisSize:
-                                                      MainAxisSize.min,
-                                                  mainAxisAlignment:
-                                                      MainAxisAlignment.start,
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.start,
-                                                  children: [
-                                                    SizedBox(
-                                                      width: double.infinity,
-                                                      child: SizedBox(
-                                                        width: double.infinity,
-                                                        child: Text(
-                                                          'UMak University Student Council',
-                                                          style: TextStyle(
-                                                            color: Colors.white,
-                                                            fontSize: 12,
-                                                            fontFamily:
-                                                                'Metropolis',
-                                                            fontWeight:
-                                                                FontWeight.w400,
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    SizedBox(height: 10),
-                                                    SizedBox(
-                                                      width: double.infinity,
-                                                      child: SizedBox(
-                                                        width: double.infinity,
-                                                        child: Text(
-                                                          'For President',
-                                                          style: TextStyle(
-                                                            color: Colors.white,
-                                                            fontSize: 24,
-                                                            fontFamily:
-                                                                'Metropolis',
-                                                            fontWeight:
-                                                                FontWeight.bold,
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                              const SizedBox(width: 50),
-                                              SizedBox(
-                                                width: 100,
-                                                child: Column(
-                                                  mainAxisSize:
-                                                      MainAxisSize.min,
-                                                  mainAxisAlignment:
-                                                      MainAxisAlignment
-                                                          .spaceBetween,
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.center,
-                                                  children: [
-                                                    Container(
-                                                      width: double.infinity,
-                                                      padding: const EdgeInsets
-                                                          .symmetric(
-                                                          horizontal: 17,
-                                                          vertical: 5),
-                                                      decoration:
-                                                          ShapeDecoration(
-                                                        color: const Color(
-                                                            0xFFFFF600),
-                                                        shape:
-                                                            RoundedRectangleBorder(
-                                                          borderRadius:
-                                                              BorderRadius
-                                                                  .circular(10),
-                                                        ),
-                                                      ),
-                                                      child: const Row(
-                                                        mainAxisSize:
-                                                            MainAxisSize.min,
-                                                        mainAxisAlignment:
-                                                            MainAxisAlignment
-                                                                .center,
-                                                        crossAxisAlignment:
-                                                            CrossAxisAlignment
-                                                                .center,
-                                                        children: [
-                                                          Text(
-                                                            '02:59',
-                                                            style: TextStyle(
-                                                              color:
-                                                                  Colors.black,
-                                                              fontSize: 12,
-                                                              fontFamily:
-                                                                  'Metropolis',
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w700,
-                                                            ),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    ),
-                                                    const SizedBox(height: 5),
-                                                    const SizedBox(
-                                                      width: double.infinity,
-                                                      child: SizedBox(
-                                                        width: double.infinity,
-                                                        child: Text(
-                                                          'Time Remaining',
-                                                          textAlign:
-                                                              TextAlign.center,
-                                                          style: TextStyle(
-                                                            color: Colors.white,
-                                                            fontSize: 8,
-                                                            fontFamily:
-                                                                'Metropolis',
-                                                            fontWeight:
-                                                                FontWeight.w700,
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  const SizedBox(height: 17),
-                                  BlocBuilder(
-                                    builder: (context, state) {
-                                      if (state is ElectionCandidatesLoading) {
-                                        return const Center(
-                                          child: CircularProgressIndicator(),
-                                        );
-                                      }
-                                      if (state is ElectionCandidatesLoaded) {
-                                        return Container(
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 30),
-                                          width: double.infinity,
-                                          child: ListBody(
-                                            children: state.electionCandidates!
-                                                .map(
-                                                  (candidate) =>
-                                                      CandidateListItem(
-                                                    candidate: candidate,
-                                                    onPressed: () {
-                                                      BlocProvider.of<
-                                                                  ElectionCandidatesBloc>(
-                                                              context)
-                                                          .add(
-                                                              GetElectionCandidateDetails(
-                                                                  candidate
-                                                                      .id));
-                                                    },
-                                                  ),
-                                                )
-                                                .toList(),
-                                          ),
-                                        );
-                                      }
-
-                                      return Container();
-                                    },
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: 114),
                             Container(
                               width: double.infinity,
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 38, vertical: 24),
-                              child: Row(
+                                  horizontal: 41, vertical: 25),
+                              decoration:
+                                  const BoxDecoration(color: Color(0xFF132255)),
+                              child: Column(
                                 mainAxisSize: MainAxisSize.min,
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
-                                  const SizedBox(width: 145),
                                   SizedBox(
-                                    width: 144,
-                                    height: 46,
-                                    child: Stack(
+                                    width: double.infinity,
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
-                                        Positioned(
-                                          left: 0,
-                                          top: 0,
-                                          child: Container(
-                                            width: 144,
-                                            height: 46,
-                                            decoration: ShapeDecoration(
-                                              color: const Color(0xFF132255),
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(999),
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                        Positioned(
-                                          left: 37,
-                                          top: 11,
-                                          child: SizedBox(
-                                            width: 71,
-                                            height: 24,
-                                            child: Row(
-                                              mainAxisSize: MainAxisSize.min,
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.start,
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.center,
-                                              children: [
-                                                const SizedBox(
-                                                  width: 47,
-                                                  child: SizedBox(
-                                                    width: 47,
-                                                    child: Text(
-                                                      'Next',
-                                                      textAlign:
-                                                          TextAlign.center,
-                                                      style: TextStyle(
-                                                        color: Colors.white,
-                                                        fontSize: 12,
-                                                        fontFamily:
-                                                            'Metropolis',
-                                                        fontWeight:
-                                                            FontWeight.w700,
-                                                      ),
+                                        SizedBox(
+                                          width: 222,
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.start,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              SizedBox(
+                                                width: double.infinity,
+                                                child: SizedBox(
+                                                  width: double.infinity,
+                                                  child: Text(
+                                                    state.activeElection.name,
+                                                    style: TextStyle(
+                                                      color: Colors.white,
+                                                      fontSize: 12,
+                                                      fontFamily: 'Metropolis',
+                                                      fontWeight:
+                                                          FontWeight.w400,
                                                     ),
                                                   ),
                                                 ),
-                                                Container(
-                                                  child: const Icon(
-                                                    Icons.arrow_right_sharp,
-                                                    color: Colors.white,
+                                              ),
+                                              SizedBox(height: 10),
+                                              SizedBox(
+                                                width: double.infinity,
+                                                child: SizedBox(
+                                                  width: double.infinity,
+                                                  child: Text(
+                                                    'For President',
+                                                    style: TextStyle(
+                                                      color: Colors.white,
+                                                      fontSize: 24,
+                                                      fontFamily: 'Metropolis',
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                    ),
                                                   ),
                                                 ),
-                                              ],
-                                            ),
+                                              ),
+                                            ],
                                           ),
                                         ),
+                                        const SizedBox(width: 50),
                                       ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 17),
+                            BlocBuilder<ElectionCandidatesBloc,
+                                ElectionCandidatesState>(
+                              builder: (context, state) {
+                                if (state is ElectionCandidatesLoading) {
+                                  return const Center(
+                                    child: CircularProgressIndicator(),
+                                  );
+                                }
+                                if (state is ElectionCandidatesLoaded) {
+                                  return Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 30),
+                                    width: double.infinity,
+                                    child: ListBody(
+                                        children: state.electionCandidates!
+                                          .asMap()
+                                          .entries
+                                          .map((entry) {
+                                        int index = entry.key;
+                                        var candidate = entry.value;
+                                        return CandidateListItem(
+                                          candidate: candidate,
+                                          onPressed: () {
+                                              BlocProvider.of<
+                                                        CandidateExperienceBloc>(
+                                                    context)
+                                                .add(GetCandidateExperience(
+                                                    candidate["id"]));
+                                          showModalBottomSheet(
+                                            context: context,
+                                            builder: (context) {
+                                            return buildBottomSheet(
+                                              context,
+                                              scr,
+                                              bottomSheetOffset,
+                                              candidate,
+                                            );
+                                            },
+                                          );
+                                          },
+                                        );
+                                        }).toList(),
+                                    ),
+                                  );
+                                }
+
+                                return Container();
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 114),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 38, vertical: 24),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            const SizedBox(width: 145),
+                            SizedBox(
+                              width: 144,
+                              height: 46,
+                              child: Stack(
+                                children: [
+                                  Positioned(
+                                    left: 0,
+                                    top: 0,
+                                    child: Container(
+                                      width: 144,
+                                      height: 46,
+                                      decoration: ShapeDecoration(
+                                        color: const Color(0xFF132255),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(999),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  Positioned(
+                                    left: 37,
+                                    top: 11,
+                                    child: SizedBox(
+                                      width: 71,
+                                      height: 24,
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.center,
+                                        children: [
+                                          const SizedBox(
+                                            width: 47,
+                                            child: SizedBox(
+                                              width: 47,
+                                              child: Text(
+                                                'Next',
+                                                textAlign: TextAlign.center,
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 12,
+                                                  fontFamily: 'Metropolis',
+                                                  fontWeight: FontWeight.w700,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                          Container(
+                                            child: const Icon(
+                                              Icons.arrow_right_sharp,
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -401,12 +277,14 @@ class _VotingScreenState extends State<VotingScreen> {
                             ),
                           ],
                         ),
-                      )
-                    : Container();
-              },
-            );
-          },
-        ),
+                      ),
+                    ],
+                  ),
+                )
+              : Container(
+                  child: Text("Loading..."),
+                );
+        },
       ),
     );
   }
@@ -415,7 +293,7 @@ class _VotingScreenState extends State<VotingScreen> {
 class CandidateListItem extends StatefulWidget {
   final VoidCallback? onPressed;
   final bool isSelected;
-  final CandidatesRow candidate;
+  final Map<String, dynamic> candidate;
 
   const CandidateListItem({
     super.key,
@@ -458,7 +336,7 @@ class _CandidateListItemState extends State<CandidateListItem> {
                     ),
                   ),
                   const SizedBox(width: 20),
-                  const SizedBox(
+                  SizedBox(
                     width: 223,
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
@@ -468,8 +346,8 @@ class _CandidateListItemState extends State<CandidateListItem> {
                         SizedBox(
                           width: double.infinity,
                           child: Text(
-                            'PASIA, Juan Dela Cruz',
-                            style: TextStyle(
+                            widget.candidate['name'],
+                            style: const TextStyle(
                               color: Colors.black,
                               fontSize: 16,
                               fontFamily: 'Metropolis',
@@ -481,7 +359,7 @@ class _CandidateListItemState extends State<CandidateListItem> {
                         SizedBox(
                           width: double.infinity,
                           child: Text(
-                            'UNITE Partylist',
+                            '${widget.candidate["partylists"]["abbreviation"]} Partylist',
                             style: TextStyle(
                               color: Colors.black,
                               fontSize: 12,

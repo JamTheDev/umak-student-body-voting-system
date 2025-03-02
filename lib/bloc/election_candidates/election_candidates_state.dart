@@ -2,7 +2,7 @@ part of 'election_candidates_bloc.dart';
 
 @immutable
 sealed class ElectionCandidatesState {
-  final List<CandidatesRow>? electionCandidates;
+  final List<Map<String, dynamic>>? electionCandidates;
   final CandidatesRow? selectedCandidateDetails;
 
   const ElectionCandidatesState({
@@ -33,7 +33,7 @@ final class ElectionCandidatesLoading extends ElectionCandidatesState {
 
 final class ElectionCandidatesLoaded extends ElectionCandidatesState {
   @override
-  final List<CandidatesRow>? electionCandidates;
+  final List<Map<String, dynamic>>? electionCandidates;
 
   const ElectionCandidatesLoaded({required this.electionCandidates})
       : super(electionCandidates: electionCandidates);
