@@ -44,6 +44,7 @@ dependencies:
   flutter_bloc: ^9.0.0
   google_sign_in: ^6.2.2
   flutter_svg: ^2.0.17
+  aes256: ^1.1.0
 
 dev_dependencies:
   flutter_test:

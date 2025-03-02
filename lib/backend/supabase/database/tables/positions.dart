@@ -30,6 +30,9 @@ class PositionsRow extends SupabaseDataRow {
   DateTime? get createdAt => getField<DateTime>('created_at');
   set createdAt(DateTime? value) => setField<DateTime>('created_at', value);
 
+  int get prio => getField<int>('prio')!;
+  set prio(int value) => setField<int>('prio', value);
+
   String? get order => getField<String>('order');
   set order(String? value) => setField<String>('order', value);
 

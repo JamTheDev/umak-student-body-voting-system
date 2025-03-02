@@ -5,6 +5,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:umakvotingapp/bloc/candidate_experience_bloc/candidate_experience_bloc.dart';
+import 'package:umakvotingapp/bloc/candidate_positions_bloc/candidate_positions_bloc.dart';
 import 'package:umakvotingapp/bloc/election_candidates/election_candidates_bloc.dart';
 import 'package:umakvotingapp/bloc/elections_bloc/elections_bloc.dart';
 import 'package:umakvotingapp/bloc/google_login_bloc/google_login_bloc.dart';
@@ -106,6 +107,9 @@ class _MainLandingPageState extends State<MainLandingPage> {
                 create: (context) => GoogleLoginBloc()),
             BlocProvider<CandidateExperienceBloc>(
               create: (context) => CandidateExperienceBloc(),
+            ),
+            BlocProvider<CandidatePositionsBloc>(
+              create: (context) => CandidatePositionsBloc(),
             )
           ],
           child: MaterialApp(

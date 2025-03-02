@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:umakvotingapp/bloc/candidate_experience_bloc/candidate_experience_bloc.dart';
-
+typedef VoteCallback = Function(String positionId, String candidateId);
 Widget buildBottomSheet(BuildContext context, ScrollController scrollController,
-    double bottomSheetOffset, Map<String, dynamic> candidate) {
+    double bottomSheetOffset, Map<String, dynamic> candidate, VoteCallback onUserVote) {
   return BlocBuilder<CandidateExperienceBloc, CandidateExperienceState>(
     builder: (context, state) {
       if (state is CandidateExperienceLoading ||
@@ -20,7 +20,6 @@ Widget buildBottomSheet(BuildContext context, ScrollController scrollController,
 
       return state is CandidateExperienceLoaded
           ? Container(
-              width: double.infinity,
               padding: const EdgeInsets.all(40),
               child: SingleChildScrollView(
                 controller: scrollController,
@@ -52,26 +51,21 @@ Widget buildBottomSheet(BuildContext context, ScrollController scrollController,
                                   ),
                                   child: ClipRRect(
                                     borderRadius: BorderRadius.circular(100),
-                                    child: SvgPicture.network(
-                                      "https://placehold.co/100x100",
-                                      fit: BoxFit.fill,
-                                      width: 100,
-                                      height: 100,
-                                    ),
+                                    
                                   ),
                                 ),
                                 const SizedBox(width: 13),
-                                Container(
-                                  width: 30,
-                                  height: 30,
-                                  decoration: const BoxDecoration(
-                                    image: DecorationImage(
-                                      image: NetworkImage(
-                                          "https://placehold.co/30x30"),
-                                      fit: BoxFit.fill,
-                                    ),
-                                  ),
-                                ),
+                                // Container(
+                                //   width: 30,
+                                //   height: 30,
+                                //   decoration: const BoxDecoration(
+                                //     image: DecorationImage(
+                                //       image: NetworkImage(
+                                //           "https://placehold.co/30x30"),
+                                //       fit: BoxFit.fill,
+                                //     ),
+                                //   ),
+                                // ),
                                 const SizedBox(width: 13),
                                 Expanded(
                                   child: Container(
@@ -90,7 +84,7 @@ Widget buildBottomSheet(BuildContext context, ScrollController scrollController,
                                             width: double.infinity,
                                             child: Text(
                                               candidate["name"],
-                                              style: TextStyle(
+                                              style: const TextStyle(
                                                 color: Colors.black,
                                                 fontSize: 24,
                                                 fontFamily: 'Metropolis',
@@ -99,7 +93,7 @@ Widget buildBottomSheet(BuildContext context, ScrollController scrollController,
                                             ),
                                           ),
                                         ),
-                                        SizedBox(height: 4),
+                                        const SizedBox(height: 4),
                                         SizedBox(
                                           width: double.infinity,
                                           child: SizedBox(
@@ -111,7 +105,7 @@ Widget buildBottomSheet(BuildContext context, ScrollController scrollController,
                                                     text:
                                                         candidate["partylists"]
                                                             ["abbreviation"],
-                                                    style: TextStyle(
+                                                    style: const TextStyle(
                                                       color: Colors.black,
                                                       fontSize: 12,
                                                       fontFamily: 'Metropolis',
@@ -122,7 +116,7 @@ Widget buildBottomSheet(BuildContext context, ScrollController scrollController,
                                                   TextSpan(
                                                     text:
                                                         ' Partylist - ${candidate["college"]["full_name"]}',
-                                                    style: TextStyle(
+                                                    style: const TextStyle(
                                                       color: Colors.black,
                                                       fontSize: 12,
                                                       fontFamily: 'Metropolis',
@@ -150,7 +144,7 @@ Widget buildBottomSheet(BuildContext context, ScrollController scrollController,
                               mainAxisAlignment: MainAxisAlignment.start,
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                SizedBox(
+                                const SizedBox(
                                   width: double.infinity,
                                   child: SizedBox(
                                     width: double.infinity,
@@ -165,7 +159,7 @@ Widget buildBottomSheet(BuildContext context, ScrollController scrollController,
                                     ),
                                   ),
                                 ),
-                                SizedBox(height: 8),
+                                const SizedBox(height: 8),
                                 SizedBox(
                                   width: double.infinity,
                                   child: SizedBox(
@@ -173,7 +167,7 @@ Widget buildBottomSheet(BuildContext context, ScrollController scrollController,
                                     child: Text(
                                       candidate["platform"],
                                       textAlign: TextAlign.justify,
-                                      style: TextStyle(
+                                      style: const TextStyle(
                                         color: Colors.black,
                                         fontSize: 12,
                                         fontFamily: 'Metropolis',
@@ -240,7 +234,7 @@ Widget buildBottomSheet(BuildContext context, ScrollController scrollController,
                                                       value.organization,
                                                       textAlign:
                                                           TextAlign.justify,
-                                                      style: TextStyle(
+                                                      style: const TextStyle(
                                                         color: Colors.black,
                                                         fontSize: 12,
                                                         fontFamily:
@@ -251,7 +245,7 @@ Widget buildBottomSheet(BuildContext context, ScrollController scrollController,
                                                     ),
                                                   ),
                                                 ),
-                                                SizedBox(height: 4),
+                                                const SizedBox(height: 4),
                                                 SizedBox(
                                                   width: double.infinity,
                                                   child: SizedBox(
@@ -260,7 +254,7 @@ Widget buildBottomSheet(BuildContext context, ScrollController scrollController,
                                                       value.position,
                                                       textAlign:
                                                           TextAlign.justify,
-                                                      style: TextStyle(
+                                                      style: const TextStyle(
                                                         color: Colors.black,
                                                         fontSize: 12,
                                                         fontFamily:
@@ -282,7 +276,7 @@ Widget buildBottomSheet(BuildContext context, ScrollController scrollController,
                                               child: Text(
                                                 "${value.startDate} - ${value.endDate ?? 'Present'}",
                                                 textAlign: TextAlign.justify,
-                                                style: TextStyle(
+                                                style: const TextStyle(
                                                   color: Color(0xFF5E5E5E),
                                                   fontSize: 12,
                                                   fontStyle: FontStyle.italic,
@@ -328,12 +322,12 @@ Widget buildBottomSheet(BuildContext context, ScrollController scrollController,
                             onPressed: () {
                               Navigator.of(context).pop();
                             },
-                            style: ButtonStyle(
+                            style: const ButtonStyle(
                                 padding: WidgetStatePropertyAll(
-                                    const EdgeInsets.all(20)),
+                                    EdgeInsets.all(20)),
                                 backgroundColor:
                                     WidgetStatePropertyAll(Colors.transparent)),
-                            icon: Icon(
+                            icon: const Icon(
                               Icons.arrow_left,
                               color: Colors.black,
                             ),
@@ -341,19 +335,22 @@ Widget buildBottomSheet(BuildContext context, ScrollController scrollController,
                           Expanded(flex: 1, child: Container()),
                           Container(
                             child: TextButton.icon(
-                                onPressed: () {},
-                                style: ButtonStyle(
+                                onPressed: () async {
+                                  print("hi");
+                                  await onUserVote(candidate["position_id"], candidate["id"]);
+                                },
+                                style: const ButtonStyle(
                                     padding: WidgetStatePropertyAll(
                                         EdgeInsets.all(20)),
                                     backgroundColor: WidgetStatePropertyAll(
                                         Color(0xFF132255))),
-                                icon: Icon(
+                                icon: const Icon(
                                   Icons.arrow_right,
                                   color: Colors.white,
                                 ),
                                 iconAlignment: IconAlignment.end,
-                                label: Text(
-                                  "Vote for XXXXX",
+                                label: const Text(
+                                  "Cast Vote",
                                   style: TextStyle(color: Colors.white),
                                 )),
                           )

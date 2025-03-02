@@ -13,24 +13,20 @@ class ElectionCandidatesBloc
       if (event is GetElectionCandidates) {
         emit(ElectionCandidatesLoading(event.electionId));
         try {
-          final selectedPosition =
-              await PositionsTable().querySingleRow(queryFn: (query) {
-            return query.eq("prio", event.prio);
-          });
-
-          print(selectedPosition);
           final response = await SupaFlow.client
               .from("candidates")
-              .select('*, partylists:partylists (id, name, abbreviation), college:colleges!college_id (id, full_name, acronym, logo_url)')
+              .select(
+                  '*, partylists:partylists (id, name, abbreviation), college:colleges!college_id (id, full_name, acronym, logo_url)')
               .eq("election_id", event.electionId)
-              .eq("position", selectedPosition[0].id);
+              .eq("position_id", event.candidatePositionId);
 
           final electionCandidates = response;
 
           print(electionCandidates);
 
-          emit(
-              ElectionCandidatesLoaded(electionCandidates: electionCandidates));
+          emit(ElectionCandidatesLoaded(
+              electionCandidates: electionCandidates,
+             ));
         } catch (e) {
           emit(ElectionCandidatesError(e.toString()));
         }

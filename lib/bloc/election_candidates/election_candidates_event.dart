@@ -5,9 +5,9 @@ sealed class ElectionCandidatesEvent {}
 
 final class GetElectionCandidates extends ElectionCandidatesEvent {
   final String electionId;
-  final int prio;
+  final String candidatePositionId;
 
-  GetElectionCandidates(this.electionId, this.prio);
+  GetElectionCandidates(this.electionId, this.candidatePositionId);
 }
 
 final class GetElectionCandidateDetails extends ElectionCandidatesEvent {
